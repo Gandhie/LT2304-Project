@@ -30,3 +30,11 @@ def make_text_dict(t):
 
 dict = make_text_dict(root)
 pprint(dict)
+
+# Getting the words in the dict (a dictionary with key w and a list of dictionaries of each word and its attributes (1 word = 1 dict in the list).). With full texts, this will probably need to be done on paragraph level and then iterating through sentences and words from there.
+words = dict['corpus']['text']['lessontext']['paragraph']['sentence']
+
+# Testing is done on B1_Idrott (the first sample text I got). Might wanna test for another 1-2 random texts for quality checking the algorithm later.
+# This text contains (according to manual counting):
+# 10x "en"
+# 5x "ett"
