@@ -2,11 +2,12 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pprint import pprint
 
-tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\B1_Rivstart_Idrott2.xml")
+tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\B1_Rivstart_Idrott.xml")
 root = tree.getroot()
 
 """Used this recipe for direct XML-to-Dict conversion, credit to user K3---rnc: https://stackoverflow.com/a/10076823"""
 def make_text_dict(t):
+    """"""
     d = {t.tag: {} if t.attrib else None}
     children = list(t)
     if children:
@@ -28,13 +29,38 @@ def make_text_dict(t):
             d[t.tag] = text
     return d
 
-dict = make_text_dict(root)
-pprint(dict)
+def count_en_ett(text_dict):
+    """"""
+    en = 0
+    ett = 0
+    for paragraph in text_dict['corpus']['text']['lessontext']['paragraph']:
+        sentence_lvl = paragraph['sentence']
+        #pprint(sentence_lvl)
+        if isinstance(sentence_lvl, dict):
+            #pprint(sentence_lvl['w'])
+            for word_meta in sentence_lvl['w']:
+                if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
+                    print(word_meta['word'])
+                    en += 1
+                elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
+                    print(word_meta['word'])
+                    ett += 1
+        elif isinstance(sentence_lvl, list):
+            for sentence in sentence_lvl:
+                #pprint(sentence['w'])
+                for word_meta in sentence['w']:
+                    if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
+                        print(word_meta['word'])
+                        en += 1
+                    elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
+                        print(word_meta['word'])
+                        ett += 1
+        else:
+            print("Found something that is not a dict/list!")
+    return en, ett
 
-# Getting the words in the dict (a dictionary with key w and a list of dictionaries of each word and its attributes (1 word = 1 dict in the list).). With full texts, this will probably need to be done on paragraph level and then iterating through sentences and words from there.
-words = dict['corpus']['text']['lessontext']['paragraph']['sentence']
 
-# Testing is done on B1_Idrott (the first sample text I got). Might wanna test for another 1-2 random texts for quality checking the algorithm later.
-# This text contains (according to manual counting):
-# 10x "en"
-# 5x "ett"
+text_dict = make_text_dict(root)
+en, ett = count_en_ett(text_dict)
+print(en, ett)
+#pprint(text_dict)
