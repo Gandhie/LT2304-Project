@@ -1,6 +1,7 @@
 import json
 import random
 from pprint import pprint
+import re
 
 def load_from_json(filename):
     """Loads dictionary from json-file.
@@ -91,7 +92,7 @@ def clean_sents(text):
     return clean_paras
 
 def mini_game(sentences):
-    """Uses the list of cleaned up sentences to generate a few fill-in-the-blank questions as a proof-of-concept mini game.
+    """Uses the list of cleaned up sentences to generate a fill-in-the-blank question as a proof-of-concept mini game.
 
     Args:
         sentences: a list of lists of strings, where each contained list is a paragraph containing strings of sentences from the text, with determiners (and nouns if applicable) are marked.
@@ -103,16 +104,37 @@ def mini_game(sentences):
     for para in sentences:
         for sent in para:
             all_sentences.append(sent)
-    print(all_sentences)
+
+    sent = random.choice(all_sentences)
+    while '**' not in sent:
+        sent = random.choice(all_sentences)
+
+    exercise = re.sub("\*\*\w+\*\*", "___", sent)
+    correct = re.findall("\*\*\w+\*\*", sent)
+    correct = re.sub("\*\*", '', correct[0])
+
+    print('\nFill in the blank with the appropriate determiner (en/ett):')
+    print(exercise)
+    answer = input()
+
+    if answer.lower() == correct.lower():
+        print("Correct!")
+    else:
+        print("Incorrect.")
 
 if __name__ == "__main__":
-
+    '''Loads dictionary from json.file.'''
     data_dt = load_from_json('marked-dt.json')
     data_dt_nn = load_from_json('marked-dt-nn')
 
+    '''Makes an organised list of the paragraphs and sentences. First option has the nouns belonging to the determiners marked, while the second option does not.'''
     paras = make_marked_sents(data_dt_nn)
     #paras = make_marked_sents(data_dt)
 
+    '''Cleans up the organised list into a list of sentence strings - to aid with the mini game.'''
     clean_paras = clean_sents(paras)
 
+    '''Runs the mini game 3 times.'''
+    mini_game(clean_paras)
+    mini_game(clean_paras)
     mini_game(clean_paras)

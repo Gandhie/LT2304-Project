@@ -53,19 +53,15 @@ def count_en_ett(text_dict):
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
                 if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
-                    #print(word_meta['word'])
                     en += 1
                 elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
-                    #print(word_meta['word'])
                     ett += 1
         elif isinstance(sentence_lvl, list):
             for sentence in sentence_lvl:
                 for word_meta in sentence['w']:
                     if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
-                        #print(word_meta['word'])
                         en += 1
                     elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
-                        #print(word_meta['word'])
                         ett += 1
         else:
             print("Found something that is not a dict/list!")
@@ -90,7 +86,6 @@ def count_dt_focus(marked_dict):
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
                 if word_meta['focus'] == 1:
-                    #print(word_meta['word'])
                     dt += 1
                 elif word_meta['focus'] == 2:
                     nn += 1
@@ -98,7 +93,6 @@ def count_dt_focus(marked_dict):
             for sentence in sentence_lvl:
                 for word_meta in sentence['w']:
                     if word_meta['focus'] == 1:
-                        #print(word_meta['word'])
                         dt += 1
                     elif word_meta['focus'] == 2:
                         nn += 1
@@ -120,14 +114,11 @@ def mark_all_dt(text_dict):
     marked_dict = deepcopy(text_dict)
     for paragraph in marked_dict['corpus']['text']['lessontext']['paragraph']:
         sentence_lvl = paragraph['sentence']
-        #pprint(sentence_lvl)
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
                 if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
-                    #print(word_meta['word'])
                     word_meta['focus'] = 1
                 elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
-                    #print(word_meta['word'])
                     word_meta['focus'] = 1
                 else:
                     word_meta['focus'] = 0
@@ -135,10 +126,8 @@ def mark_all_dt(text_dict):
             for sentence in sentence_lvl:
                 for word_meta in sentence['w']:
                     if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
-                        #print(word_meta['word'])
                         word_meta['focus'] = 1
                     elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
-                        #print(word_meta['word'])
                         word_meta['focus'] = 1
                     else:
                         word_meta['focus'] = 0
@@ -162,11 +151,8 @@ def mark_dts_nn(marked_dict):
         sentence_lvl = paragraph['sentence']
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
-                #print(type(word_meta), type(sentence_lvl['w']))
                 if word_meta['focus'] == 1:
-                    #tmp = sentence_lvl['w']
                     start = sentence_lvl['w'].index(word_meta)
-                    #print('Index:', start)
                     for noun_meta in sentence_lvl['w'][start:]:
                         if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
                             noun_meta['focus'] = 2
@@ -174,11 +160,8 @@ def mark_dts_nn(marked_dict):
         elif isinstance(sentence_lvl, list):
             for sentence in sentence_lvl:
                 for word_meta in sentence['w']:
-                    #print(type(word_meta), type(sentence_lvl['w']))
                     if word_meta['focus'] == 1:
-                        #tmp = sentence['w']
                         start = sentence['w'].index(word_meta)
-                        #print('Index:', start)
                         for noun_meta in sentence['w'][start:]:
                             if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
                                 noun_meta['focus'] = 2
@@ -222,7 +205,6 @@ if __name__ == "__main__":
     dt, nn = count_dt_focus(dt_marked_dict)
     #print('DT:', dt, '\nNN:', nn)  # Test print
     '''Adds focus attribute to word metadata for the nouns of the determiners (focus: 2).'''
-    #marked_dict = mark_all_dt(text_dict)
     nn_marked_dict = mark_dts_nn(dt_marked_dict)
     #pprint(nn_marked_dict) # Test print
     '''Counts focus-marked words (determiners and nouns).'''
