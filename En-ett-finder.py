@@ -190,7 +190,7 @@ def save_to_json(marked_dict, filename):
 
 if __name__ == "__main__":
     '''Read XML-text from file. Change path to parse another XML-text.'''
-    tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\B1_Rivstart_Idrott.xml")
+    tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\C1_Skrivtrappan_Platsansokan.xml")
     root = tree.getroot()
 
     '''Makes dictionary representation of XML-text.'''

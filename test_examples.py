@@ -93,6 +93,7 @@ def clean_sents(text):
 
 def mini_game(sentences):
     """Uses the list of cleaned up sentences to generate a fill-in-the-blank question as a proof-of-concept mini game.
+    If a sentence contains more than one determiner, the mini game only asks about the first one.
 
     Args:
         sentences: a list of lists of strings, where each contained list is a paragraph containing strings of sentences from the text, with determiners (and nouns if applicable) are marked.
