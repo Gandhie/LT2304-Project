@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET
+import json
 from collections import defaultdict
 from pprint import pprint
+from copy import deepcopy
 
 def make_text_dict(t):
     """Converts the XML-format parsed with ElementTree into a usable Python dictionary format which retains the structure.
@@ -73,13 +75,16 @@ def count_dt_focus(marked_dict):
     """Developing function, only used during development!
     Counts the words (determiners) which has been marked as "focused" in the dictionary (specifically in the word metadata).
     Used to compare to the count found in count_en_ett().
+    Also counts nouns marked as focused. Number will be 0 if nouns were not marked in the dictionary.
 
     Args:
         marked_dict: a dictionary representation of the XML-text, with the added word metadata attribute "focus".
 
     Returns:
-        dt: the count of "focus"-marked words (determiners)."""
+        dt: the count of "focus"-marked words (determiners).
+        nn: the count of "focus"-marked nouns (0 if nouns were not marked)."""
     dt = 0
+    nn = 0
     for paragraph in marked_dict['corpus']['text']['lessontext']['paragraph']:
         sentence_lvl = paragraph['sentence']
         if isinstance(sentence_lvl, dict):
@@ -87,16 +92,20 @@ def count_dt_focus(marked_dict):
                 if word_meta['focus'] == 1:
                     #print(word_meta['word'])
                     dt += 1
+                elif word_meta['focus'] == 2:
+                    nn += 1
         elif isinstance(sentence_lvl, list):
             for sentence in sentence_lvl:
                 for word_meta in sentence['w']:
                     if word_meta['focus'] == 1:
                         #print(word_meta['word'])
                         dt += 1
+                    elif word_meta['focus'] == 2:
+                        nn += 1
         else:
             print("Found something that is not a dict/list!")
 
-    return dt
+    return dt, nn
 
 def mark_all_dt(text_dict):
     """Loops through a dictionary representation of the XML-text and finds the determiners "en" and "ett" in the same way as count_en_ett().
@@ -108,9 +117,10 @@ def mark_all_dt(text_dict):
 
     Returns:
         marked_dict: a dictionary representation of the XML-text, with the added word metadata attribute "focus"."""
-    marked_dict = text_dict
+    marked_dict = deepcopy(text_dict)
     for paragraph in marked_dict['corpus']['text']['lessontext']['paragraph']:
         sentence_lvl = paragraph['sentence']
+        #pprint(sentence_lvl)
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
                 if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
@@ -137,18 +147,87 @@ def mark_all_dt(text_dict):
 
     return marked_dict
 
-# Read XML-text from file.
-tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\B1_Rivstart_Idrott.xml")
-root = tree.getroot()
+def mark_dts_nn(marked_dict):
+    """Loops through a dictionary representation of the XML-text where determiners have been "focus"-marked.
+    Finds the "focus"-marked determiners and looks for their nouns from the words after the determiner until the end of the current sentence. The found noun is then marked with "focus": 2. Once the first noun of the right type for the determiner is found, it stops looking and moved on to the next determiner.
+    This is an add-on to make the second approach of marking both determiners and their nouns possible.
 
-# Makes dictionary representation of XML-text.
-text_dict = make_text_dict(root)
-# Counts "en" and "ett".
-en, ett = count_en_ett(text_dict)
-#print(en, ett, (en+ett)) # Test print
-# Adds focus attribute to word metadata and sets "en" and "ett" determiners to 1.
-marked_dict = mark_all_dt(text_dict)
-#pprint(marked_dict) # Test print
-# Counts focus-marked words (determiners).
-dt = count_dt_focus(marked_dict)
-#print(dt)  # Test print
+    Args:
+        marked_dict: a dictionary representation of the XML-text, with the added word metadata attribute "focus" (only determiners marked).
+
+    Returns:
+        nn_marked_dict: a dictionary representation of the XML-text, with the added wordmetadata attribute "focus" for both determiners (1) and their nouns (2)."""
+    nn_marked_dict = deepcopy(marked_dict)
+    for paragraph in nn_marked_dict['corpus']['text']['lessontext']['paragraph']:
+        sentence_lvl = paragraph['sentence']
+        if isinstance(sentence_lvl, dict):
+            for word_meta in sentence_lvl['w']:
+                #print(type(word_meta), type(sentence_lvl['w']))
+                if word_meta['focus'] == 1:
+                    #tmp = sentence_lvl['w']
+                    start = sentence_lvl['w'].index(word_meta)
+                    #print('Index:', start)
+                    for noun_meta in sentence_lvl['w'][start:]:
+                        if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
+                            noun_meta['focus'] = 2
+                            break
+        elif isinstance(sentence_lvl, list):
+            for sentence in sentence_lvl:
+                for word_meta in sentence['w']:
+                    #print(type(word_meta), type(sentence_lvl['w']))
+                    if word_meta['focus'] == 1:
+                        #tmp = sentence['w']
+                        start = sentence['w'].index(word_meta)
+                        #print('Index:', start)
+                        for noun_meta in sentence['w'][start:]:
+                            if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
+                                noun_meta['focus'] = 2
+                                break
+        else:
+            print("Found something that is not a dict/list!")
+    return nn_marked_dict
+
+def save_to_json(marked_dict, filename):
+    """Saves the dictionary representation with the "focus" attribute to a json-file.
+    Make sure that you save the right type of dictionary, depending on if you want only determiners "focus"-marked or both determiners and their nouns.
+
+    Args:
+        marked_dict: a dictionary representation of the XML-text, with the added word metadata attribute "focus" for both determiners (1) and their nouns (2).
+        filename: a string which will become the name of the file.
+    Returns:
+        -
+    """
+    if ".json" not in filename:
+        filename = filename + ".json"
+
+    with open(filename, 'w', encoding='utf-8') as output:
+        json.dump(marked_dict, output, indent=4, ensure_ascii=False)
+
+    print('Successfully saved to file.')
+
+if __name__ == "__main__":
+    '''Read XML-text from file. Change path to parse another XML-text.'''
+    tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\B1_Rivstart_Idrott.xml")
+    root = tree.getroot()
+
+    '''Makes dictionary representation of XML-text.'''
+    text_dict = make_text_dict(root)
+    '''Counts "en" and "ett".'''
+    en, ett = count_en_ett(text_dict)
+    #print(en, ett, (en+ett)) # Test print
+    '''Adds focus attribute to word metadata and sets "en" and "ett" determiners to 1.'''
+    dt_marked_dict = mark_all_dt(text_dict)
+    #pprint(marked_dict) # Test print
+    '''Counts focus-marked words (determiners).'''
+    dt, nn = count_dt_focus(dt_marked_dict)
+    #print('DT:', dt, '\nNN:', nn)  # Test print
+    '''Adds focus attribute to word metadata for the nouns of the determiners (focus: 2).'''
+    #marked_dict = mark_all_dt(text_dict)
+    nn_marked_dict = mark_dts_nn(dt_marked_dict)
+    #pprint(nn_marked_dict) # Test print
+    '''Counts focus-marked words (determiners and nouns).'''
+    dt2, nn2 = count_dt_focus(nn_marked_dict)
+    #print('DT:', dt2, '\nNN:', nn2)  # Test print
+    '''Saves marked dictionary to json-file (both versions of the dictionary here).'''
+    save_to_json(dt_marked_dict, 'marked-dt')
+    save_to_json(nn_marked_dict, 'marked-dt-nn.json')
