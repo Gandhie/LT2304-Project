@@ -6,7 +6,9 @@ The project is a script to find and mark Swedish determiners "en" and "ett" as w
 ## Script 1: En-ett-finder.py
 
 __Running the script:__
+```bash
 python En-ett-finder.py
+```
 
 __Description:__
 This script loads data from XML-files and converts them to a convenient Python dictionary format which roughly mirrors the XML-structure. It can then perform a sequence of operations to mark determiners and nouns in the dictionary by adding an additional attribute to word metadata called "focus".
@@ -18,7 +20,9 @@ Once this attribute has been added to all words with the correct number, the dic
 ## Script 2: test_examples.py
 
 __Running the script:__
+```bash
 python test_examples.py
+```
 
 __Description:__
 This script loads the dictionaries from the saved json-files and then proceeds to reorganise the data into a list of paragraph lists, containing sentence lists of words. In these lists, determiners are surrounded by double ** and nouns (if applied) are surrounded by double --. These lists are then further cleaned up until the list is a simple list of strings, where each string is a full sentence. This last cleanup is done to facilitate the proof-of-concept mini game.
