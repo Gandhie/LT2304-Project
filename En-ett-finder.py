@@ -39,6 +39,7 @@ def count_en_ett(text_dict):
     """Developing function, only used in development!
     Loops through a dictionary version of the XML-text and finds and counts all occurences of the determiners "en" and "ett" (also capitalised versions).
     Used to compare number of determiners found to manually counted determiners in the pdf-text.
+    Found an issue with single word sentences (often only a bracket or another such character in the XML-text). The "isinstance()" check on word_meta is a bandaid-fix for this. It simply skips these one-word sentences, since they most likely are not relevant to the issue at hand and because I found no relatively quick fix for the issue.
 
     Args:
         text_dict: a dictionary representation of the XML-text.
@@ -52,17 +53,19 @@ def count_en_ett(text_dict):
         sentence_lvl = paragraph['sentence']
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
-                if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
-                    en += 1
-                elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
-                    ett += 1
-        elif isinstance(sentence_lvl, list):
-            for sentence in sentence_lvl:
-                for word_meta in sentence['w']:
+                if isinstance(word_meta, dict):
                     if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
                         en += 1
                     elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
                         ett += 1
+        elif isinstance(sentence_lvl, list):
+            for sentence in sentence_lvl:
+                for word_meta in sentence['w']:
+                    if isinstance(word_meta, dict):
+                        if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
+                            en += 1
+                        elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
+                            ett += 1
         else:
             print("Found something that is not a dict/list!")
     return en, ett
@@ -72,6 +75,7 @@ def count_dt_focus(marked_dict):
     Counts the words (determiners) which has been marked as "focused" in the dictionary (specifically in the word metadata).
     Used to compare to the count found in count_en_ett().
     Also counts nouns marked as focused. Number will be 0 if nouns were not marked in the dictionary.
+    Found an issue with single word sentences (often only a bracket or another such character in the XML-text). The "isinstance()" check on word_meta is a bandaid-fix for this. It simply skips these one-word sentences, since they most likely are not relevant to the issue at hand and because I found no relatively quick fix for the issue.
 
     Args:
         marked_dict: a dictionary representation of the XML-text, with the added word metadata attribute "focus".
@@ -85,17 +89,19 @@ def count_dt_focus(marked_dict):
         sentence_lvl = paragraph['sentence']
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
-                if word_meta['focus'] == 1:
-                    dt += 1
-                elif word_meta['focus'] == 2:
-                    nn += 1
-        elif isinstance(sentence_lvl, list):
-            for sentence in sentence_lvl:
-                for word_meta in sentence['w']:
+                if isinstance(word_meta, dict):
                     if word_meta['focus'] == 1:
                         dt += 1
                     elif word_meta['focus'] == 2:
                         nn += 1
+        elif isinstance(sentence_lvl, list):
+            for sentence in sentence_lvl:
+                for word_meta in sentence['w']:
+                        if isinstance(word_meta, dict):
+                            if word_meta['focus'] == 1:
+                                dt += 1
+                            elif word_meta['focus'] == 2:
+                                nn += 1
         else:
             print("Found something that is not a dict/list!")
 
@@ -105,6 +111,7 @@ def mark_all_dt(text_dict):
     """Loops through a dictionary representation of the XML-text and finds the determiners "en" and "ett" in the same way as count_en_ett().
     Adds an attribute "focus" to the metadata of all words and sets it to 1 if the word is an "en" or "ett" determiner, otherwise 0.
     This is the general approach which marks all "en" and "ett" determiners without looking at their nouns.
+    Found an issue with single word sentences (often only a bracket or another such character in the XML-text). The "isinstance()" check on word_meta is a bandaid-fix for this. It simply skips these one-word sentences, since they most likely are not relevant to the issue at hand and because I found no relatively quick fix for the issue.
 
     Args:
         text_dict: a dictionary representation of the XML-text.
@@ -116,21 +123,23 @@ def mark_all_dt(text_dict):
         sentence_lvl = paragraph['sentence']
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
-                if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
-                    word_meta['focus'] = 1
-                elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
-                    word_meta['focus'] = 1
-                else:
-                    word_meta['focus'] = 0
-        elif isinstance(sentence_lvl, list):
-            for sentence in sentence_lvl:
-                for word_meta in sentence['w']:
-                    if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or word_meta['word'] == 'En'):
+                if isinstance(word_meta, dict):
+                    if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en' or   word_meta['word'] == 'En'):
                         word_meta['focus'] = 1
-                    elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or word_meta['word'] == 'Ett'):
+                    elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] == 'ett' or    word_meta['word'] == 'Ett'):
                         word_meta['focus'] = 1
                     else:
                         word_meta['focus'] = 0
+        elif isinstance(sentence_lvl, list):
+            for sentence in sentence_lvl:
+                for word_meta in sentence['w']:
+                    if isinstance(word_meta, dict):
+                        if word_meta['msd'] == 'DT.UTR.SIN.IND' and (word_meta['word'] == 'en'  or word_meta['word'] == 'En'):
+                            word_meta['focus'] = 1
+                        elif word_meta['msd'] == 'DT.NEU.SIN.IND' and (word_meta['word'] ==     'ett' or word_meta['word'] == 'Ett'):
+                            word_meta['focus'] = 1
+                        else:
+                            word_meta['focus'] = 0
         else:
             print("Found something that is not a dict/list!")
 
@@ -140,6 +149,7 @@ def mark_dts_nn(marked_dict):
     """Loops through a dictionary representation of the XML-text where determiners have been "focus"-marked.
     Finds the "focus"-marked determiners and looks for their nouns from the words after the determiner until the end of the current sentence. The found noun is then marked with "focus": 2. Once the first noun of the right type for the determiner is found, it stops looking and moved on to the next determiner.
     This is an add-on to make the second approach of marking both determiners and their nouns possible.
+    Found an issue with single word sentences (often only a bracket or another such character in the XML-text). The "isinstance()" check on word_meta is a bandaid-fix for this. It simply skips these one-word sentences, since they most likely are not relevant to the issue at hand and because I found no relatively quick fix for the issue.
 
     Args:
         marked_dict: a dictionary representation of the XML-text, with the added word metadata attribute "focus" (only determiners marked).
@@ -151,21 +161,23 @@ def mark_dts_nn(marked_dict):
         sentence_lvl = paragraph['sentence']
         if isinstance(sentence_lvl, dict):
             for word_meta in sentence_lvl['w']:
-                if word_meta['focus'] == 1:
-                    start = sentence_lvl['w'].index(word_meta)
-                    for noun_meta in sentence_lvl['w'][start:]:
-                        if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
-                            noun_meta['focus'] = 2
-                            break
+                if isinstance(word_meta, dict):
+                    if word_meta['focus'] == 1:
+                        start = sentence_lvl['w'].index(word_meta)
+                        for noun_meta in sentence_lvl['w'][start:]:
+                            if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] ==  'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
+                                noun_meta['focus'] = 2
+                                break
         elif isinstance(sentence_lvl, list):
             for sentence in sentence_lvl:
                 for word_meta in sentence['w']:
-                    if word_meta['focus'] == 1:
-                        start = sentence['w'].index(word_meta)
-                        for noun_meta in sentence['w'][start:]:
-                            if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] == 'NN.UTR.SIN.IND.GEN':
-                                noun_meta['focus'] = 2
-                                break
+                    if isinstance(word_meta, dict):
+                        if word_meta['focus'] == 1:
+                            start = sentence['w'].index(word_meta)
+                            for noun_meta in sentence['w'][start:]:
+                                if noun_meta['msd'] == 'NN.NEU.SIN.IND.NOM' or noun_meta['msd']     == 'NN.UTR.SIN.IND.NOM' or noun_meta['msd'] ==  'NN.UTR.SIN.IND.GEN':
+                                    noun_meta['focus'] = 2
+                                    break
         else:
             print("Found something that is not a dict/list!")
     return nn_marked_dict
@@ -190,26 +202,26 @@ def save_to_json(marked_dict, filename):
 
 if __name__ == "__main__":
     '''Read XML-text from file. Change path to parse another XML-text.'''
-    tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\C1_Skrivtrappan_Platsansokan.xml")
+    tree = ET.parse("F:\\Users\\Amelie\\Desktop\\B1_idrott\\C1_Skrivtrappan_Min.xml")
     root = tree.getroot()
 
     '''Makes dictionary representation of XML-text.'''
     text_dict = make_text_dict(root)
     '''Counts "en" and "ett".'''
     en, ett = count_en_ett(text_dict)
-    #print(en, ett, (en+ett)) # Test print
+    #print(en, ett, (en+ett)) # Test print for counting.
     '''Adds focus attribute to word metadata and sets "en" and "ett" determiners to 1.'''
     dt_marked_dict = mark_all_dt(text_dict)
     #pprint(marked_dict) # Test print
     '''Counts focus-marked words (determiners).'''
     dt, nn = count_dt_focus(dt_marked_dict)
-    #print('DT:', dt, '\nNN:', nn)  # Test print
+    #print('DT:', dt, '\nNN:', nn)  # Test print for counting.
     '''Adds focus attribute to word metadata for the nouns of the determiners (focus: 2).'''
     nn_marked_dict = mark_dts_nn(dt_marked_dict)
     #pprint(nn_marked_dict) # Test print
     '''Counts focus-marked words (determiners and nouns).'''
     dt2, nn2 = count_dt_focus(nn_marked_dict)
-    #print('DT:', dt2, '\nNN:', nn2)  # Test print
+    #print('DT:', dt2, '\nNN:', nn2)  # Test print for counting.
     '''Saves marked dictionary to json-file (both versions of the dictionary here).'''
-    save_to_json(dt_marked_dict, 'marked-dt')
-    save_to_json(nn_marked_dict, 'marked-dt-nn.json')
+    save_to_json(dt_marked_dict, 'min-dt')
+    save_to_json(nn_marked_dict, 'min-dt-nn.json')

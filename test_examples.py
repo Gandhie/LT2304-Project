@@ -26,6 +26,7 @@ def make_marked_sents(data):
     """Makes a list of paragraphs, where each paragraph is a list of sentences where
     determiners are marked with ** before and after, and nouns (if applicable) are marked
     with -- before and after.
+    Found an issue with single word sentences (often only a bracket or another such character in the XML-text). The "isinstance()" check on word_meta is a bandaid-fix for this. It simply skips these one-word sentences, since they most likely are not relevant to the issue at hand and because I found no relatively quick fix for the issue.
 
     Args:
         data: a dictionary representation of an XML-text with "focus"-marking for determiners
@@ -42,23 +43,25 @@ def make_marked_sents(data):
         if isinstance(sentence_lvl, dict):
             sent = []
             for word_meta in sentence_lvl['w']:
-                if word_meta['focus'] == 1:
-                    sent.append('**' + word_meta['word'] + '**')
-                elif word_meta['focus'] == 2:
-                    sent.append('--' + word_meta['word'] + '--')
-                elif word_meta['focus'] == 0:
-                    sent.append(word_meta['word'])
-            sents.append(sent)
-        elif isinstance(sentence_lvl, list):
-            for sentence in sentence_lvl:
-                sent = []
-                for word_meta in sentence['w']:
+                if isinstance(word_meta, dict):
                     if word_meta['focus'] == 1:
                         sent.append('**' + word_meta['word'] + '**')
                     elif word_meta['focus'] == 2:
                         sent.append('--' + word_meta['word'] + '--')
                     elif word_meta['focus'] == 0:
                         sent.append(word_meta['word'])
+            sents.append(sent)
+        elif isinstance(sentence_lvl, list):
+            for sentence in sentence_lvl:
+                sent = []
+                for word_meta in sentence['w']:
+                    if isinstance(word_meta, dict):
+                        if word_meta['focus'] == 1:
+                            sent.append('**' + word_meta['word'] + '**')
+                        elif word_meta['focus'] == 2:
+                            sent.append('--' + word_meta['word'] + '--')
+                        elif word_meta['focus'] == 0:
+                            sent.append(word_meta['word'])
                 sents.append(sent)
         else:
             print("Found something that is not a dict/list!")
@@ -125,8 +128,8 @@ def mini_game(sentences):
 
 if __name__ == "__main__":
     '''Loads dictionary from json.file.'''
-    data_dt = load_from_json('marked-dt.json')
-    data_dt_nn = load_from_json('marked-dt-nn')
+    data_dt = load_from_json('fatoush-dt.json')
+    data_dt_nn = load_from_json('fatoush-dt-nn')
 
     '''Makes an organised list of the paragraphs and sentences. First option has the nouns belonging to the determiners marked, while the second option does not.'''
     paras = make_marked_sents(data_dt_nn)
